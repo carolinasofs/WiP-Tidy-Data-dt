@@ -113,6 +113,11 @@ wip <- fread(here("data", "WB-WiP.csv"),
 
 # Continue from here...
 
+```{r}
+wip[, .N, by = .(V65)]
+```
+
+
 
 
 
