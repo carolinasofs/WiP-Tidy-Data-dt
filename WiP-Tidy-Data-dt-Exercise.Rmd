@@ -117,7 +117,8 @@ wip <- fread(here("data", "WB-WiP.csv"),
 wip[, .N, by = .(V65)]
 ```
 
-#Removing columns
+# Tidying the Data
+## Removing columns
 
 ```{r}
 wip[, c("Indicator.Name", "Indicator.Code", "V65"):= NULL]
@@ -126,7 +127,7 @@ head(names(wip))
 tail(names(wip))
 ```
 
-# Reshaping to long format 
+## Reshaping to long format 
 
 ```{r}
 WP <- melt(wip, id.vars = c("Country", "Code"), 
@@ -137,7 +138,7 @@ WP <- melt(wip, id.vars = c("Country", "Code"),
 WP
 ```
 
-#Final tweaks to WP
+## Final tweaks to WP
 
 ```{r}
 WP[, `:=`(Year = as.numeric(gsub("[^[:digit:].]",
@@ -147,8 +148,55 @@ setcolorder(WP, c("Country", "Code", "Year", "pctWiP", "Ratio"))
 WP
 ```
 
+# Exploratory Analysis 
+## Focusing on China
 
+```{r}
+WP[Country %in% "China"]
+```
 
+```{r}
+library(ggplot2)
+library(magrittr)
+WP[Country %in% "China"] %>%
+ggplot(aes(Year, pctWiP)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(limits = c(0, 30)) +
+  ylab("% Women in Parliament")
+```
+
+## Portugal vs. European Union Countries 
+
+```{r}
+WP[Country %in% c("Portugal", "China", "Angola", "Cuba", "Cyprus", "World", "European Union", "Greece")] %>% 
+  ggplot(aes(Year, pctWiP, colour = Country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(1990, 2020, 5)) +
+  scale_y_continuous(limits = c(0, 50), 
+                     breaks = seq(0, 50, by = 10)) +
+  ggtitle("Women in Parliament: Random Countries") +
+  ylab("% Women in Parliament")
+```
+
+## Countries with the highest percentage of women in parliament 
+
+```{r}
+WP[order(-pctWiP), head(.SD, 10)]
+```
+
+## Countries with the highest percentage of women in parliament 
+
+```{r}
+WP[order(Year, -pctWiP), head(.SD, 1), by = Year]
+```
+
+## Merging Continent 
+
+```{r}
+
+```
 
 
 
