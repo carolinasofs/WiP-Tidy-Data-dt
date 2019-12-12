@@ -1,6 +1,6 @@
 ---
 title: "Women in Parliament - Tidy Data"
-author: "Your Name Here"
+author: "Carolina Santos"
 date: "`r format(Sys.time(), '%a %d %b %Y (%H:%M:%S)')`"
 output:
   html_document:
@@ -111,8 +111,6 @@ wip <- fread(here("data", "WB-WiP.csv"),
              check.names = TRUE)
 ```
 
-# Continue from here...
-
 ```{r}
 wip[, .N, by = .(V65)]
 ```
@@ -186,13 +184,13 @@ WP[Country %in% c("Portugal", "China", "Angola", "Cuba", "Cyprus", "World", "Eur
 WP[order(-pctWiP), head(.SD, 10)]
 ```
 
-## Countries with the highest percentage of women in parliament 
+## Countries with the highest percentage of women in parliament by Year
 
 ```{r}
 WP[order(Year, -pctWiP), head(.SD, 1), by = Year]
 ```
 
-## Merging Continent 
+# Merging Continent 
 
 ```{r}
 library(countrycode)
@@ -203,7 +201,7 @@ setnames(c1, c("continent", "wb"),
 cWP <- c1[WP, on = "Code"]
 ```
 
-#Highest Percentages by Year and Continent
+## Highest Percentages by Year and Continent
 
 ```{r}
 cWP[Year %in% c(1990, 2018) & !is.na(Continent)][
@@ -211,7 +209,7 @@ cWP[Year %in% c(1990, 2018) & !is.na(Continent)][
   order(Continent, Year), .(Continent, Year, Country, pctWiP)]
 ```
 
-#Decline in Percentage
+## Decline in Percentage
 
 ```{r}
 dWP <- cWP[
@@ -275,7 +273,7 @@ cWP[!is.na(Continent),
     by = .(Year)]
 ```
 
-# Global Ranking - Portugal and China
+## Global Ranking - Portugal and China
 ```{r}
 cWP[Country == "Portugal",
     .(Country, Year, pctWiP, Ratio, RankG, TotalG)][order(Year)]
@@ -286,7 +284,7 @@ cWP[Country == "China",
     .(Country, Year, pctWiP, Ratio, RankG, TotalG)][order(Year)]
 ```
 
-# Continent Ranks by Year 
+## Continent Ranks by Year 
 
 ```{r}
 cWP[!is.na(Continent),
@@ -294,7 +292,7 @@ cWP[!is.na(Continent),
     by = .(Continent, Year)]
 ```
 
-# Portugal's Ranking in Europe and it's plot 
+## Portugal's Ranking in Europe and it's plot 
 
 ```{r}
 cWP[Country == "Portugal",
@@ -313,7 +311,7 @@ cWP[Country %in% c("Portugal", "Sweden", "Spain", "Hungary", "Romania", "Finland
   ylab("Rank in Europe")
 ```
 
-# China's Ranking in Asia and it's plot 
+## China's Ranking in Asia and it's plot 
 
 ```{r}
 cWP[Country == "China",
@@ -334,7 +332,7 @@ cWP[Country %in% c("China", "Japan", "Thailand", "Bangladesh", "Vietnam", "Indon
 
 China has one of the lowest rankings comparing to other countries in Asia, out of the ones considered, only Vietnam has a worst ranking than China. 
 
-# Highest Rank By Year and Continent 
+## Highest Rank By Year and Continent 
 
 ```{r}
 cWP[Year %in% c(1990, 2018) & RankC == 1][
