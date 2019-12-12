@@ -195,10 +195,165 @@ WP[order(Year, -pctWiP), head(.SD, 1), by = Year]
 ## Merging Continent 
 
 ```{r}
-
+library(countrycode)
+library(data.table)
+c1 <- as.data.table(codelist)[, .(continent, wb)]
+setnames(c1, c("continent", "wb"),
+         c("Continent", "Code"))
+cWP <- c1[WP, on = "Code"]
 ```
 
+#Highest Percentages by Year and Continent
 
+```{r}
+cWP[Year %in% c(1990, 2018) & !is.na(Continent)][
+  order(Year, -pctWiP), head(.SD, 1), by = .(Year, Continent)][ 
+  order(Continent, Year), .(Continent, Year, Country, pctWiP)]
+```
+
+#Decline in Percentage
+
+```{r}
+dWP <- cWP[
+  order(Country, Year), .SD[c(1, .N)], by = Country][,
+                                                     pctDiff := pctWiP - shift(pctWiP), by = Country][
+                                                       pctDiff <0][
+  order(pctDiff)]
+dWP[!is.na(Continent), .(Country, pctWiP, pctDiff)]
+```
+
+Now, plot the trend lines for countries with at least a 5% decline 
+
+```{r}
+dclpct <-  unique(dWP[!is.na(Continent) & pctDiff <= -5]$Country)
+WP[Country %in% dclpct] %>% 
+  ggplot(aes(Year, pctWiP, colour = Country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(1990, 2020, 5)) +
+  scale_y_continuous(limits = c(0, 40),
+  breaks = seq(0, 40, by = 10)) +
+  ggtitle("Women in Parliament: Decline >= 5%") + 
+  ylab("% Women in Parliament")
+```
+
+Now, for countries with at least a 10% decline
+
+```{r}
+dclpct <-  unique(dWP[!is.na(Continent) & pctDiff <= -10]$Country)
+WP[Country %in% dclpct] %>% 
+  ggplot(aes(Year, pctWiP, colour = Country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(1990, 2020, 5)) +
+  scale_y_continuous(limits = c(0, 40),
+  breaks = seq(0, 40, by = 10)) +
+  ggtitle("Women in Parliament: Decline >= 10%") + 
+  ylab("% Women in Parliament")
+```
+
+Now, for countries with at least a 1% decline
+
+```{r}
+dclpct <-  unique(dWP[!is.na(Continent) & pctDiff <= -15]$Country)
+WP[Country %in% dclpct] %>% 
+  ggplot(aes(Year, pctWiP, colour = Country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(1990, 2020, 5)) +
+  scale_y_continuous(limits = c(0, 40),
+  breaks = seq(0, 40, by = 10)) +
+  ggtitle("Women in Parliament: Decline >= 15%") + 
+  ylab("% Women in Parliament")
+```
+
+# Ranked status - Global Ranks by Year
+
+```{r}
+cWP[!is.na(Continent),
+    `:=` (RankG = rank(-pctWiP), TotalG = .N),
+    by = .(Year)]
+```
+
+# Global Ranking - Portugal and China
+```{r}
+cWP[Country == "Portugal",
+    .(Country, Year, pctWiP, Ratio, RankG, TotalG)][order(Year)]
+```
+
+```{r}
+cWP[Country == "China",
+    .(Country, Year, pctWiP, Ratio, RankG, TotalG)][order(Year)]
+```
+
+# Continent Ranks by Year 
+
+```{r}
+cWP[!is.na(Continent),
+    `:=` (RankC = rank(-pctWiP), TotalC = .N),
+    by = .(Continent, Year)]
+```
+
+# Portugal's Ranking in Europe and it's plot 
+
+```{r}
+cWP[Country == "Portugal",
+    .(Country, Year, pctWiP, Ratio, RankC, TotalC)][order(Year)]
+```
+
+```{r}
+cWP[Country %in% c("Portugal", "Sweden", "Spain", "Hungary", "Romania", "Finland", "Germany")] %>%
+  ggplot(aes(Year, RankC, colour = Country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(1990, 2020, 5)) +
+  scale_y_continuous(limits = c(0, 45), 
+                     breaks = seq(0, 45, by = 10)) +
+  ggtitle("Women in Parliament: Ranked") +
+  ylab("Rank in Europe")
+```
+
+# China's Ranking in Asia and it's plot 
+
+```{r}
+cWP[Country == "China",
+    .(Country, Year, pctWiP, Ratio, RankC, TotalC)][order(Year)]
+```
+
+```{r}
+cWP[Country %in% c("China", "Japan", "Thailand", "Bangladesh", "Vietnam", "Indonesia")] %>%
+  ggplot(aes(Year, RankC, colour = Country)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(1990, 2020, 5)) +
+  scale_y_continuous(limits = c(0, 45), 
+                     breaks = seq(0, 45, by = 10)) +
+  ggtitle("Women in Parliament: Ranked") +
+  ylab("Rank in Asia")
+```
+
+China has one of the lowest rankings comparing to other countries in Asia, out of the ones considered, only Vietnam has a worst ranking than China. 
+
+# Highest Rank By Year and Continent 
+
+```{r}
+cWP[Year %in% c(1990, 2018) & RankC == 1][
+  order(Continent, Year), .(Continent, Year, Country, pctWiP, RankC)]
+```
+
+# Overall Picture 
+
+```{r}
+library(gghighlight)
+cWP[is.na(Continent)] %>%
+  ggplot(aes(Year, pctWiP, group = Country)) +
+  geom_line() +
+  gghighlight(Country == "World", use_direct_label = FALSE) +
+  scale_x_continuous(breaks = seq(1990, 2020, 5)) +
+  scale_y_continuous(limits = c(0, 40), breaks = seq(0, 40, by = 10)) +
+  ggtitle("Women in Parliament: Global Trends") +
+  ylab("% Women in Parliament")
+```
 
 ```{r imageEnd, echo=FALSE, out.width="60%"}
 knitr::include_graphics("images/Women_in_Parliament_rect.svg")
